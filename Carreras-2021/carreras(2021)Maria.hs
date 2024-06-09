@@ -23,9 +23,6 @@ data Auto = Auto {
     distancia :: Float
 } deriving (Show, Eq)
 
--- data Carrera = Carrera {
---     autos :: [Auto]
--- } deriving (Show)
 
 type Carrera = [Auto]
 
@@ -42,9 +39,9 @@ leGana :: Auto -> Auto -> Bool
 leGana unAuto otroAuto = distancia unAuto > distancia otroAuto
 
 puesto :: Auto -> Carrera -> Int
-puesto unAuto unaCarrera = 1 + length (filter (not . leGana unAuto) unaCarrera)
+puesto unAuto unaCarrera = (1+).  length . filter (not . leGana unAuto) $ unaCarrera 
 
-clioMio = Auto "Negro" 10 100
+
 
 ------------- Punto 2 -----------------
 
@@ -83,15 +80,15 @@ afectarALosQueCumplen :: (Auto -> Bool) -> (Auto -> Auto) -> [Auto] -> [Auto]
 afectarALosQueCumplen criterio efecto lista
   = (map efecto . filter criterio) lista ++ filter (not.criterio) lista
 
-type PowerUp = Carrera -> Carrera
+type PowerUp = Auto -> Carrera -> Carrera
 
-terremoto :: Auto -> PowerUp
+terremoto :: PowerUp
 terremoto unAuto = afectarALosQueCumplen (estaCerca unAuto) (bajarVelocidadenUnaCantidad 50)
 
-miguelitos :: Float -> Auto -> PowerUp
+miguelitos :: Float -> PowerUp
 miguelitos unaCantidad unAuto = afectarALosQueCumplen (leGana unAuto) (bajarVelocidadenUnaCantidad unaCantidad)
 
-jetPack :: Float -> Auto -> PowerUp
+jetPack :: Float -> PowerUp
 jetPack unTiempo unAuto unaCarrera =  aplicarJetPackAlAuto unTiempo unAuto : filter (sonDistintos unAuto) unaCarrera
 
 aplicarJetPackAlAuto :: Float -> Auto -> Auto
@@ -108,6 +105,27 @@ aplicarJetPackAlAuto unTiempo = hacerCorrerUnTiempo unTiempo . modificarVelocida
 --      b. Desarrollar las siguientes funciones de modo que puedan usarse para generar los eventos que se dan en una carrera:
 --          i.  correnTodos que hace que todos los autos que están participando de la carrera corran durante un tiempo indicado.
 --          ii. usaPowerUp que a partir de un power up y del color del auto que gatilló el poder en cuestión, encuentre el auto correspondiente dentro del estado actual de la carrera para usarlo y produzca los efectos esperados para ese power up.
+
+
+simularCarrera :: Carrera -> [Carrera -> Carrera] -> [(Int, String)]
+simularCarrera unaCarrera = armarTabla . aplicarEventosACarrera unaCarrera
+
+aplicarEventosACarrera :: Carrera -> [Carrera -> Carrera] -> Carrera
+aplicarEventosACarrera unaCarrera unosEventos = foldl (\unaCarrera unEvento -> unEvento unaCarrera) unaCarrera unosEventos
+--Se pueden sacar unaCarrera y unosEventos pero me parece que queda mas expresivo asi
+
+armarTabla :: Carrera -> [(Int, String)]
+armarTabla unaCarrera = map (\unAuto -> (puesto unAuto unaCarrera, color unAuto)) unaCarrera
+
+correnTodos :: Float -> Carrera -> Carrera
+correnTodos unTiempo = map (hacerCorrerUnTiempo unTiempo)
+
+usaPowerUp :: PowerUp -> String -> Carrera -> Carrera
+usaPowerUp unPowerUp unColor unaCarrera = unPowerUp ((head . buscarAutoPorColor unColor) unaCarrera) unaCarrera
+
+buscarAutoPorColor :: String -> Carrera -> [Auto]
+buscarAutoPorColor unColor = filter ((== unColor) . color)
+
 --      c. Mostrar un ejemplo de uso de la función simularCarrera con autos de colores rojo, blanco, azul y negro que vayan inicialmente a velocidad 120 y su distancia recorrida sea 0, de modo que ocurran los siguientes eventos:
 --          - todos los autos corren durante 30 segundos
 --          - el azul usa el power up de jet pack por 3 segundos
@@ -116,3 +134,40 @@ aplicarJetPackAlAuto unTiempo = hacerCorrerUnTiempo unTiempo . modificarVelocida
 --          - el blanco usa el power up de miguelitos que reducen la velocidad en 20
 --          - el negro usa el power up de jet pack por 6 segundos
 --          - todos los autos corren durante 10 segundos
+
+clio :: Auto
+clio = Auto "Negro" 120 0
+
+corollaCross :: Auto
+corollaCross = Auto "Blanco" 170 0
+
+zafira :: Auto
+zafira = Auto "Azul" 140 0
+
+ecoSport :: Auto
+ecoSport = Auto "Rojo" 155 0
+
+copaPiston :: Carrera
+copaPiston = [clio, corollaCross, zafira, ecoSport]
+
+eventos :: [Carrera->Carrera]
+eventos = [correnTodos 50]
+
+eventosDeLaCarrera :: [Carrera->Carrera]
+eventosDeLaCarrera = [correnTodos 30, usaPowerUp (jetPack 3) "Azul", usaPowerUp terremoto "Blanco", correnTodos 40, usaPowerUp (miguelitos 20) "Blanco" , usaPowerUp (jetPack 6) "Negro", correnTodos 10]
+
+-- En base a tu solución, responder:
+-- Si se quisiera agregar un nuevo power up, un misil teledirigido, que para poder activarlo se deba indicar el color del auto al que se quiere impactar, ¿la solución actual lo permite o sería necesario cambiar algo de lo desarrollado en los puntos anteriores? Justificar.
+
+-- Mi solucion lo permitiria, lo implementaria asi:
+
+misilTeledirigido :: String -> PowerUp
+misilTeledirigido colorAImpactar unAuto unaCarrera = hacerLoQueHaceElMisil ((head . buscarAutoPorColor colorAImpactar) unaCarrera) : filter (\cadaAuto -> color cadaAuto /= colorAImpactar) unaCarrera
+
+hacerLoQueHaceElMisil ::  Auto -> Auto
+hacerLoQueHaceElMisil unAuto = unAuto
+
+
+-- Si una carrera se conformara por infinitos autos, ¿sería posible usar las funciones del punto 1b y 1c de modo que terminen de evaluarse? Justificar.
+
+-- Si seria posible gracias al "Lazy evaluation", esto hace que compare 1 a 1 los autos de la carrera con el dado, entonces en el punto B, que es chequear si un auto va tranquilo evaluaria si tiene otro cerca, al encontrar al menos 1 que este cerca, ya deja de evaluar y retorna false.
