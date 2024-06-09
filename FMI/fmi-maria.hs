@@ -1,6 +1,5 @@
 import Data.List (genericLength, find)
 import Text.Show.Functions
-import qualified Control.Applicative as primero
 
 -----------------------------------
 ------------- Punto 1 -------------
@@ -29,40 +28,38 @@ prestarMillones :: Float -> Estrategia
 prestarMillones unosMillones unPais = unPais {deudaEnMillones = deudaEnMillones unPais + unosMillones * 1.5}
 
 reducirTrabajoPublico :: Float -> Estrategia
-reducirTrabajoPublico cantAReducir unPais
-    | sectorPublico unPais > 100 = modificarTrabajoPublico (sectorPublico unPais - cantAReducir) . modificarIngresoPerCapita (ingresoPerCapita unPais * 0.8) $ unPais 
-    | otherwise = modificarTrabajoPublico (sectorPublico unPais - cantAReducir) . modificarIngresoPerCapita (ingresoPerCapita unPais * 0.85) $ unPais 
+reducirTrabajoPublico cantAReducir unPais = unPais {sectorPublico = sectorPublico unPais - cantAReducir, ingresoPerCapita = ingresoPerCapita unPais * reduccionIngreso unPais}
 
-modificarTrabajoPublico :: Float -> Pais -> Pais
-modificarTrabajoPublico nuevoValor unPais = unPais {sectorPublico =  max 0 nuevoValor}
 
-modificarIngresoPerCapita :: Float -> Pais -> Pais
-modificarIngresoPerCapita nuevoValor unPais = unPais {ingresoPerCapita =  max 0 nuevoValor}
+reduccionIngreso :: Pais -> Float
+reduccionIngreso unPais
+    | sectorPrivado unPais > 100 = 0.8
+    | otherwise = 0.85
 
 darExplotacion :: RecursoNatural -> Estrategia
-darExplotacion unRecurso unPais = modificarRecursosNaturales (filter (/= unRecurso) (recursosNaturales unPais)) . modificarDeuda (deudaEnMillones unPais - 2) $ unPais
+darExplotacion unRecurso unPais = quitarRecurso unRecurso unPais {deudaEnMillones = deudaEnMillones unPais - 2}
 
-modificarRecursosNaturales :: [RecursoNatural] -> Pais -> Pais
-modificarRecursosNaturales nuevosRecursos unPais = unPais {recursosNaturales = nuevosRecursos}
+quitarRecurso :: RecursoNatural -> Estrategia
+quitarRecurso unRecurso unPais = unPais {recursosNaturales = filter (/= unRecurso) (recursosNaturales unPais)}
 
-modificarDeuda :: Float -> Pais -> Pais
-modificarDeuda nuevaDeuda unPais = unPais {deudaEnMillones = nuevaDeuda}
 
 establecerBlindaje :: Estrategia
-establecerBlindaje unPais = modificarDeuda (deudaEnMillones unPais + 0.5 * pbi) . modificarTrabajoPublico (sectorPrivado unPais - 500) $ unPais
+establecerBlindaje unPais = prestarMillones (pbi unPais * 0.5) . reducirTrabajoPublico 500 $ unPais
 
 pbi :: Pais -> Float
-pbi = ingresoPerCapita unPais * (sectorPublico unPais + sectorPrivado unPais)
+pbi unPais = ingresoPerCapita unPais * (sectorPublico unPais + sectorPrivado unPais)
 
 -----------------------------------
 ------------- Punto 3 -------------
 -----------------------------------
 
-prestar200MillonesydarMineria :: Estrategia
-prestar200MillonesydarMineria = prestarMillones 200 . darExplotacion "Mineria"
+type Receta = [Estrategia]
 
-namibiaModificado :: Pais
-namibiaModificado = prestar200MillonesydarMineria namibia
+receta :: Receta
+receta = [prestarMillones 200, darExplotacion "Mineria"]
+
+aplicarReceta :: Receta -> Pais -> Pais
+aplicarReceta unaReceta unPais = foldl (\unPais unaEstrategia -> unaEstrategia unPais) unPais unaReceta
 
 --El efecto colateral se logra dando un nuevo pais llamado namibia modificado que tiene una deuda de 200 millones mas que el original y no tiene el recurso natural "Mineria", esto se debe a que en haskell no se pueden modificar los valores de un pais ya que son inmutables, por lo que se debe crear un nuevo pais con los valores modificados.
 
@@ -71,7 +68,7 @@ namibiaModificado = prestar200MillonesydarMineria namibia
 -----------------------------------
 
 puedenZafar :: [Pais] -> [Pais]
-puedenZafar = filter (elem "Petroleo" . recursosNaturales)
+puedenZafar = filter $ elem "Petroleo" . recursosNaturales
 
 totalDeuda :: [Pais] -> Float
 totalDeuda = sum . map deudaEnMillones
@@ -84,8 +81,7 @@ subioElPBI :: Pais -> Pais -> Bool
 subioElPBI unPais elPaisModificado = pbi unPais < pbi elPaisModificado 
 
 estaOrdenadaDePeorAMejor :: [Estrategia] -> Pais -> Bool
+estaOrdenadaDePeorAMejor [] _ = True
 estaOrdenadaDePeorAMejor [estrategia] _ = True
-estaOrdenadaDePeorAMejor estrategia:estrategias unPais = subioElPBI unPais (aplicarEstrategia unPais) && estaOrdenadaDePeorAMejor estrategias (aplicarEstrategia unPais)
+estaOrdenadaDePeorAMejor (estrategia:estrategias) unPais = subioElPBI unPais (estrategia unPais) && estaOrdenadaDePeorAMejor estrategias (estrategia unPais)
 
-aplicarEstrategia :: Estrategia -> Pais -> Pais
-aplicarEstrategia unasEstrategia unPais = unaEstrategia unPais
