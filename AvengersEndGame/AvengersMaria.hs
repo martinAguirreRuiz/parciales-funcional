@@ -182,10 +182,10 @@ drStrange = Superheroe {
 }
 
 listaDeClonesDelDrStrange :: [Superheroe]
-listaDeClonesDelDrStrange = iterate nuevoDrStrange drStrange
+listaDeClonesDelDrStrange = iterate (nuevoDrStrange 0) drStrange
 
-nuevoDrStrange :: Superheroe -> Superheroe
-nuevoDrStrange unDrStrange = unDrStrange {nombre = init (nombre unDrStrange) ++ show (length listaDeClonesDelDrStrange)}
+nuevoDrStrange :: Int -> Superheroe -> Superheroe
+nuevoDrStrange valorSufijo unDrStrange = unDrStrange {nombre = init (nombre unDrStrange) ++ show (1+valorSufijo)}
 
 
 -------------------------------------
