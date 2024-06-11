@@ -1,6 +1,6 @@
 # Parcial tomado por Scarpa en 2019
 
-La gente del bien se junto para derrotar al mai, y ahora nuestro programa Haskell esta repleto de superheroes. De ellos conocemos su nombre, su vida, su planeta de origen, su artefacto predilecto y su villano enemigo. De este artefacto sabemos el nombre y cuanto dano sufrio.
+La gente del bien se junto para derrotar al mal, y ahora nuestro programa Haskell esta repleto de superheroes. De ellos conocemos su nombre, su vida, su planeta de origen, su artefacto predilecto y su villano enemigo. De este artefacto sabemos el nombre y cuanto daño sufrio.
 
 Los villanos no se querian quedar atras, y de ellos conocemos su nombre, planeta de origen y su arma.
 
