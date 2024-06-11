@@ -1,6 +1,7 @@
 import Data.List (genericLength, find)
 import Text.Show.Functions
 
+
 -- Carreras
 -- Queremos armar un programa que nos permita simular unas fantásticas carreras de autos en las cuales cada vehículo avanza tan rápido como puede para consagrarse campeón, aprovechandose del uso de algunos poderes especiales (o power ups) que encuentren a lo largo del trayecto para sacar ventaja por sobre los demás autos.
 
@@ -33,7 +34,7 @@ sonDistintos :: Auto -> Auto -> Bool
 sonDistintos unAuto otroAuto = unAuto /= otroAuto
 
 vaTranquilo :: Auto -> Carrera -> Bool
-vaTranquilo unAuto unaCarrera = not (any (estaCerca unAuto) unaCarrera) && all (leGana unAuto) unaCarrera
+vaTranquilo unAuto unaCarrera = (not . any (estaCerca unAuto)) unaCarrera && all (leGana unAuto) unaCarrera
 
 leGana :: Auto -> Auto -> Bool
 leGana unAuto otroAuto = distancia unAuto > distancia otroAuto

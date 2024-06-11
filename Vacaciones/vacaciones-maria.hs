@@ -142,3 +142,5 @@ espiritualidadDeUnTurista unTour unTurista = ( estres unTurista - estresPostTour
     where cansancioPostTour = cansancio (hacerUnTour unTour unTurista)
           estresPostTour = estres (hacerUnTour unTour unTurista)
 
+    
+

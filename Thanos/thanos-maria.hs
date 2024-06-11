@@ -101,7 +101,7 @@ guanteleteDeGoma = Guantelete "goma" [gemaTiempo, gemaAlma "usar Mjolnir", gemaL
 type Enemigo = Personaje
 
 utilizar :: [Gema] -> Enemigo -> Enemigo
-utilizar unasGemas unEnemigo = foldl (flip usarGema) unEnemigo unasGemas
+utilizar unasGemas unEnemigo = foldr usarGema unEnemigo unasGemas
 
 usarGema :: Gema -> Enemigo -> Enemigo
 usarGema unaGema unEnemigo = unaGema unEnemigo
