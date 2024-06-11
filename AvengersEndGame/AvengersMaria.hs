@@ -1,7 +1,6 @@
 
 import Data.List (genericLength, find)
 import Text.Show.Functions
-import Distribution.Simple.HaskellSuite (numericVersion)
 
 
 -------------------------------------
